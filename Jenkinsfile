@@ -1,50 +1,33 @@
 pipeline {
-   agent any
+  agent { label 'slave_linux_hulk' }
 
-    parameters {
-        choice(choices: ['int','preprod', 'prod'], description: 'Quel environnement ?', name: 'env')
+  parameters {
+    string(name: 'BASE_URL', defaultValue: 'http://ga-int-alb-2103090581.eu-west-1.elb.amazonaws.com', description: 'ga base url')
+    string(name: 'V_USERS', defaultValue: '1', description: 'Number of virtual users')
+  }
+
+  options {
+    disableConcurrentBuilds()
+    buildDiscarder(logRotator(numToKeepStr: '3'))
+  }
+
+  tools {
+    maven "maven-3.6.0"
+    jdk "jdk-8"
+  }
+
+  stages {
+    stage('Stress Test') {
+      steps {
+        sh """
+          mvn gatling:test \
+            -Dproxy_host=fr000-proxy002 \
+            -Dproxy_port=8080 \
+            -Dbase_url=${BASE_URL} \
+            -Dv_users=${V_USERS}
+          """
+        gatlingArchive()
+      }
     }
-
-    tools {
-        maven 'maven-3.6.0'
-		jdk 'jdk-8'
-    }
-
-    options {
-        disableConcurrentBuilds()
-        buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
-    }
-	
-	triggers {
-        pollSCM 'H/59 * * * *'
-    }
-
-    stages {
-        stage('Clean') {
-            steps {
-                deleteDir()
-            }
-        }
-
-        stage('Clone') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Build') {
-            steps {
-                sh "echo ${params.env}"
-                sh "mvn clean install -P${params.env},livraison "
-            }
-        }
-	stage('Email notification') {
-		    steps {
-		mail bcc: '', body: '''Hello,
-		Ceci est une notification mail du job
-		Thanks''', cc: '', from: '', replyTo: '', subject: 'Jenkins job', to: 'coundoulamathmaty@gmail.com'
-			    }
-	} 
-    }
+  }
 }
-
