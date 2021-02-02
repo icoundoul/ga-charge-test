@@ -1,5 +1,5 @@
 pipeline {
-  agent { label 'slave_linux_hulk' }
+  agent any
 
   parameters {
     string(name: 'BASE_URL', defaultValue: 'http://ga-int-alb-2103090581.eu-west-1.elb.amazonaws.com', description: 'ga base url')
