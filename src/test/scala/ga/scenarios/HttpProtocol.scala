@@ -20,7 +20,7 @@ object HttpProtocol {
     .headers(Map("Proxy-Connection" -> "keep-alive"))
 
 
-  if (PROXY_HOST != null && PROXY_PORT != null) {
+  /*if (PROXY_HOST != null && PROXY_PORT != null) {
     INSTANCE = INSTANCE.proxy(Proxy(PROXY_HOST, valueOf(PROXY_PORT)))
-  }
+  }*/
 }
